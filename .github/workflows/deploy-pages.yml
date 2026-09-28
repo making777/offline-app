@@ -31,7 +31,7 @@ jobs:
         run: |
           rm -rf site
           mkdir site
-          unzip -q academic-company-offline-bundle-v8.zip -d site
+          unzip -q academic-company-offline-bundle-v9.zip -d site
 
           cat > site/index.html <<'EOF'
           <!doctype html>
@@ -39,6 +39,8 @@ jobs:
           <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width,initial-scale=1">
+            <meta name="theme-color" content="#f4f1ec">
+            <link rel="manifest" href="./manifest.json">
             <title>Offline Apps</title>
             <style>
               body {
@@ -69,8 +71,96 @@ jobs:
             <a href="./company-internal/company-v1/">
               🏢 COMPANY INTERNAL
             </a>
+
+            <script>
+              if ('serviceWorker' in navigator) {
+                window.addEventListener('load', function () {
+                  navigator.serviceWorker.register('./sw.js', {
+                    scope: './'
+                  }).catch(console.warn);
+                });
+              }
+            </script>
           </body>
           </html>
+          EOF
+
+          cat > site/manifest.json <<'EOF'
+          {
+            "name": "Offline Apps",
+            "short_name": "Offline Apps",
+            "lang": "ja",
+            "start_url": "./",
+            "scope": "./",
+            "display": "standalone",
+            "background_color": "#f4f1ec",
+            "theme_color": "#f4f1ec",
+            "icons": []
+          }
+          EOF
+
+          ASSETS=$(find site -type f ! -name 'sw.js' | sed 's#^site/#./#' | jq -R -s 'split("\n") | map(select(length > 0))')
+
+          cat > site/sw.js <<EOF
+          const CACHE_NAME = 'offline-apps-root-v9';
+
+          const ASSETS = $ASSETS;
+
+          self.addEventListener('install', event => {
+            event.waitUntil(
+              caches.open(CACHE_NAME)
+                .then(cache => cache.addAll(ASSETS))
+                .then(() => self.skipWaiting())
+            );
+          });
+
+          self.addEventListener('activate', event => {
+            event.waitUntil(
+              caches.keys()
+                .then(keys =>
+                  Promise.all(
+                    keys
+                      .filter(key => key !== CACHE_NAME)
+                      .map(key => caches.delete(key))
+                  )
+                )
+                .then(() => self.clients.claim())
+            );
+          });
+
+          self.addEventListener('fetch', event => {
+            const request = event.request;
+
+            if (request.method !== 'GET') {
+              return;
+            }
+
+            event.respondWith(
+              caches.match(request)
+                .then(cached => {
+                  if (cached) {
+                    return cached;
+                  }
+
+                  return fetch(request)
+                    .then(response => {
+                      const copy = response.clone();
+
+                      caches.open(CACHE_NAME)
+                        .then(cache => cache.put(request, copy));
+
+                      return response;
+                    })
+                    .catch(() => {
+                      if (request.mode === 'navigate') {
+                        return caches.match('./index.html');
+                      }
+
+                      return undefined;
+                    });
+                })
+            );
+          });
           EOF
 
       - name: Setup Pages
