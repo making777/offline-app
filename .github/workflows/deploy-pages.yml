@@ -31,7 +31,7 @@ jobs:
         run: |
           rm -rf site
           mkdir site
-          unzip -q academic-company-offline-bundle-v9.zip -d site
+          unzip -q academic-company-offline-bundle-v10.zip -d site
 
           cat > site/index.html <<'EOF'
           <!doctype html>
@@ -39,7 +39,7 @@ jobs:
           <head>
             <meta charset="utf-8">
             <meta name="viewport" content="width=device-width,initial-scale=1">
-            <meta name="theme-color" content="#f4f1ec">
+            <meta name="theme-color" content="#102A43">
             <link rel="manifest" href="./manifest.json">
             <title>Offline Apps</title>
             <style>
@@ -50,6 +50,7 @@ jobs:
                 padding: 32px 20px;
                 line-height: 1.6;
               }
+
               a {
                 display: block;
                 padding: 16px;
@@ -60,6 +61,7 @@ jobs:
               }
             </style>
           </head>
+
           <body>
             <h1>Offline Apps</h1>
             <p>ローカル動作用アプリ</p>
@@ -93,8 +95,8 @@ jobs:
             "start_url": "./",
             "scope": "./",
             "display": "standalone",
-            "background_color": "#f4f1ec",
-            "theme_color": "#f4f1ec",
+            "background_color": "#F5F7F9",
+            "theme_color": "#102A43",
             "icons": []
           }
           EOF
@@ -102,7 +104,7 @@ jobs:
           ASSETS=$(find site -type f ! -name 'sw.js' | sed 's#^site/#./#' | jq -R -s 'split("\n") | map(select(length > 0))')
 
           cat > site/sw.js <<EOF
-          const CACHE_NAME = 'offline-apps-root-v9';
+          const CACHE_NAME = 'offline-apps-root-v10';
 
           const ASSETS = $ASSETS;
 
