@@ -31,7 +31,7 @@ jobs:
         run: |
           rm -rf site
           mkdir site
-          unzip -q academic-company-offline-bundle-v10.zip -d site
+          unzip -q academic-company-offline-bundle-v11.zip -d site
 
           cat > site/index.html <<'EOF'
           <!doctype html>
@@ -104,7 +104,7 @@ jobs:
           ASSETS=$(find site -type f ! -name 'sw.js' | sed 's#^site/#./#' | jq -R -s 'split("\n") | map(select(length > 0))')
 
           cat > site/sw.js <<EOF
-          const CACHE_NAME = 'offline-apps-root-v10';
+          const CACHE_NAME = 'offline-apps-root-v11';
 
           const ASSETS = $ASSETS;
 
